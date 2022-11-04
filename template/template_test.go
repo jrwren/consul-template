@@ -1686,6 +1686,17 @@ func TestTemplate_Execute(t *testing.T) {
 			false,
 		},
 		{
+			"helper_sortByLength",
+			&NewTemplateInput{
+				Contents: `{{ "a,bb,ccc" | split "," | sortByLength }}`,
+			},
+			&ExecuteInput{
+				Brain: NewBrain(),
+			},
+			"[ccc bb a]",
+			false,
+		},
+		{
 			"helper_timestamp",
 			&NewTemplateInput{
 				Contents: `{{ timestamp }}`,

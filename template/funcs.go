@@ -1203,16 +1203,43 @@ func split(sep, s string) ([]string, error) {
 	return strings.Split(s, sep), nil
 }
 
+type lengther interface {
+	len(any) int
+}
+
 type StringLenSlice []string
 
 func (x StringLenSlice) Len() int           { return len(x) }
 func (x StringLenSlice) Less(i, j int) bool { return len(x[j]) < len(x[i]) }
 func (x StringLenSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
-// sortByLength sorts a slice of strings ordering largest to smallest
-func sortByLength(a []string) ([]string, error) {
-	sort.Sort(StringLenSlice(a))
-	return a, nil
+// sortByLength sorts a slice ordering largest to smallest
+func sortByLength(a any) ([]any, error) {
+	switch a.(type) {
+	case []any:
+		// sprig list creates a []any even though it may be a []string. Just copy it.
+		aa := a.([]any)
+		b := make([]string, len(aa))
+		for i := range aa {
+			b[i] = aa[i].(string)
+		}
+		sort.Sort(StringLenSlice(b))
+		// and copy back. seems like we need a generic sprig, or throw out sprig :(
+		for i := range aa {
+			aa[i] = b[i]
+		}
+
+		return aa, nil
+	case []string:
+		aa := a.([]string)
+		b := make([]any, len(aa))
+		sort.Sort(StringLenSlice(aa))
+		for i := range aa {
+			b[i] = aa[i]
+		}
+		return b, nil
+	}
+	return nil, fmt.Errorf("sortByLength: unknown type %T", a)
 }
 
 // timestamp returns the current UNIX timestamp in UTC. If an argument is
